@@ -3,7 +3,6 @@ package telran.employees.server;
 import static telran.employees.common.EmployeesApiConstants.*;
 
 import java.util.Scanner;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -25,6 +24,7 @@ public class EmployeesServerAppl {
 			if (adminComand.equalsIgnoreCase("q")) {
 				scanner.close();
 				server.setIsStopped(true);
+				executor.shutdown();
 				break;
 			}
 		}
@@ -33,7 +33,6 @@ public class EmployeesServerAppl {
 //		} catch (InterruptedException e) {
 //			e.printStackTrace();
 //		}
-		executor.shutdown();
 		System.out.println("Main app message: server's thread stopped.");
 		System.out.println("Main app stopped.");
 	}

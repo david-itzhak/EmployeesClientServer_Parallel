@@ -18,7 +18,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 	}
 
 	@Override
-	public ReturnCodes addEmployee(Employee empl) {
+	public synchronized ReturnCodes addEmployee(Employee empl) {
 		if (employees.putIfAbsent(empl.getId(), empl) != null) {
 			return ReturnCodes.EMPLOYEE_ALREADY_EXISTS;
 		}
@@ -34,7 +34,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 	}
 
 	@Override
-	public ReturnCodes removeEmployee(long id) {
+	public synchronized ReturnCodes removeEmployee(long id) {
 		Employee empl = employees.remove(id);
 		if (empl == null) {
 			return ReturnCodes.EMPLOYEE_NOT_FOUND;
@@ -54,7 +54,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 	}
 
 	@Override
-	public Employee updateEmployee(Employee updatedEmployee) {
+	public synchronized Employee updateEmployee(Employee updatedEmployee) {
 		Employee empl = employees.replace(updatedEmployee.getId(), updatedEmployee);
 		if (empl == null) {
 			return null;
@@ -72,7 +72,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 	}
 
 	@Override
-	public ArrayList<Employee> getEmployeesByAges(int ageFrom, int ageTo) {
+	public synchronized ArrayList<Employee> getEmployeesByAges(int ageFrom, int ageTo) {
 		if (ageTo < ageFrom) {
 			getEmployeesByAges(ageTo, ageFrom);
 			// throw new IllegalArgumentException();
@@ -83,7 +83,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 	}
 
 	@Override
-	public ArrayList<Employee> getEmployeesByDepartment(String department) {
+	public synchronized ArrayList<Employee> getEmployeesByDepartment(String department) {
 		return toArrayList(employeesDepartment.getOrDefault(department, new LinkedList<>())); // Почему дефолтное
 																								// значение в форме
 																								// LinkedList, а не
@@ -92,7 +92,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 	}
 
 	@Override
-	public ArrayList<Employee> getEmployeesBySalary(int salaryFrom, int salaryTo) {
+	public synchronized ArrayList<Employee> getEmployeesBySalary(int salaryFrom, int salaryTo) {
 		if (salaryTo < salaryFrom) {
 			getEmployeesBySalary(salaryTo, salaryFrom);
 			// throw new IllegalArgumentException();
@@ -104,22 +104,22 @@ public class EmployeeServiceImpl implements EmployeeService {
 	}
 
 	@Override
-	public Employee getEmployee(long id) {
+	public synchronized Employee getEmployee(long id) {
 		return employees.get(id);
 	}
 
 	@Override
-	public int size() {
+	public synchronized int size() {
 		return employees.size();
 	}
 
 	@Override
-	public ArrayList<Employee> getAllEmployees() {
+	public synchronized ArrayList<Employee> getAllEmployees() {
 		return toArrayList(employees.values());
 	}
 
 	@Override
-	public MinMaxSalaryEmployees[] getEmployeesBySalariesInterval(int intervals) {
+	public synchronized MinMaxSalaryEmployees[] getEmployeesBySalariesInterval(int intervals) {
 		int smallestSalary = getMin(employees.values());
 		int biggestSalary = getMax(employees.values());
 		double intervalLenth = (biggestSalary + 1.0 - smallestSalary) / intervals;
@@ -151,7 +151,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 	}
 
 	@Override
-	public DepartmentSalary[] getDepartmentAvgSalaryDistribution() {
+	public synchronized DepartmentSalary[] getDepartmentAvgSalaryDistribution() {
 		return employeesDepartment.entrySet().stream() // Какие сущности выходят из этого потока?
 				.map(e -> new DepartmentSalary(e.getKey(),
 						e.getValue().stream().mapToInt(Employee::getSalary).summaryStatistics().getAverage()))
@@ -161,7 +161,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
 	private ArrayList<Employee> toArrayList(Iterable<Employee> iterable) {
 		ArrayList<Employee> res = new ArrayList<>();
-		//System.out.println(res); // Зачем печатать? Он же пустой.
+		// System.out.println(res); // Зачем печатать? Он же пустой.
 		for (Employee emp : iterable) {
 			res.add(emp);
 		}

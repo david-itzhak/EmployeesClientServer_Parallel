@@ -14,7 +14,7 @@ public class ClientSessionHandler implements Runnable {
 	public ClientSessionHandler(Socket socket, Protocol protocol, AtomicBoolean isStopped) {
 		this.socket = socket;
 		try {
-			socket.setSoTimeout(10000);
+			this.socket.setSoTimeout(10000);
 		} catch (SocketException e) {
 			e.printStackTrace();
 		}
@@ -28,10 +28,18 @@ public class ClientSessionHandler implements Runnable {
 				ObjectInputStream input = new ObjectInputStream(socket.getInputStream());
 				ObjectOutputStream output = new ObjectOutputStream(socket.getOutputStream())) {
 			while (!isStopped.get()) {
-				ProtocolRequest request = (ProtocolRequest) input.readObject();
-				ProtocolResponse response = protocol.getResponse(request);
-				output.writeObject(response);
-				output.reset();
+				try {
+					ProtocolRequest request = (ProtocolRequest) input.readObject();
+					ProtocolResponse response = protocol.getResponse(request);
+					output.writeObject(response);
+					output.reset();
+				} catch (SocketTimeoutException e) {
+					if (isStopped.get()) {
+						closeSocet();
+						System.out.println("ClientSessionHandler's thread message: Administrator closed the server");
+						break;
+					}
+				}
 			}
 		} catch (EOFException e) {
 			System.out.println("Client closed connection");
@@ -42,5 +50,14 @@ public class ClientSessionHandler implements Runnable {
 			// e.printStackTrace();
 		}
 		System.out.println("Disconnected client:" + socket.getRemoteSocketAddress());
+	}
+
+	public void closeSocet() {
+		try {
+			socket.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }
